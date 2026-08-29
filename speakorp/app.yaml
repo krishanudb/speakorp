@@ -1,1 +1,7 @@
 command: ['npm', 'run', 'start']
+
+env:
+  # Injected from the databricks.yml `serving-endpoint` resource. The value is
+  # the endpoint NAME (not a URL); the serving plugin uses it for inference.
+  - name: DATABRICKS_SERVING_ENDPOINT_NAME
+    valueFrom: serving-endpoint
