@@ -16,11 +16,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ensure the PR source branch is dev
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          echo "Base branch : ${{ github.base_ref }}"
-          echo "Source branch: ${{ github.head_ref }}"
-          if [ "${{ github.head_ref }}" != "dev" ]; then
-            echo "::error::PRs into 'main' are only allowed from 'dev' (got '${{ github.head_ref }}'). Merge your feature branch into 'dev' first."
+          echo "Base branch  : $BASE_REF"
+          echo "Source branch: $HEAD_REF"
+          if [ "$HEAD_REF" != "dev" ]; then
+            echo "::error::PRs into 'main' are only allowed from 'dev' (got '$HEAD_REF'). Merge your feature branch into 'dev' first."
             exit 1
           fi
           echo "OK: PR into 'main' originates from 'dev'."
