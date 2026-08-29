@@ -1,0 +1,20 @@
+resources:
+  jobs:
+    hello_world_serverless_compute:
+      name: Hello World Serverless Compute Example
+      environments:
+      - environment_key: default
+        spec:
+          client: "4"
+          dependencies:
+          - ${var.whl_path}
+      tasks:
+      - task_key: hello_world
+        notebook_task:
+          notebook_path: ../../notebooks/hello_world.py
+          base_parameters:
+            catalog_name: ${var.catalog_name}
+            schema_name: ${var.schema_name}
+        environment_key: default
+      queue:
+        enabled: true

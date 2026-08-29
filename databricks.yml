@@ -1,0 +1,57 @@
+bundle:
+  name: dabs_repo_template # SETUP TODO: Change to your project name
+
+artifacts:
+  default:
+    type: whl
+    build: uv build --package dabs-repo-template --wheel --out-dir dist
+    path: .
+
+include:
+  - resources/**/*.yml
+
+variables:
+  catalog_name:
+    description: Unity Catalog catalog name
+    default: ${bundle.name}_${bundle.target}
+  schema_name:
+    description: Unity Catalog schema name
+    default: default
+  git_branch:
+    default: "main"
+  whl_version:
+    default: "0.1.0"
+  whl_path:
+    default: "${workspace.root_path}/artifacts/.internal/${bundle.name}-${var.whl_version}-py3-none-any.whl"
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://fe-vm-vdm-classic-b8uaoy.cloud.databricks.com/ # SETUP TODO: Add your workspace URL
+      root_path: /Workspace/Users/${workspace.current_user.userName}/bundles/${bundle.name}
+
+  integration_test:
+    mode: development
+    workspace:
+      host: https://fe-vm-vdm-classic-b8uaoy.cloud.databricks.com/ # SETUP TODO: Add your workspace URL
+      root_path: /Workspace/Users/${workspace.current_user.userName}/bundles/${bundle.name}/${var.git_branch}
+
+  staging:
+    mode: production
+    presets:
+      name_prefix: "[staging] "
+    run_as:
+      service_principal_name: 7f724768-4f35-4aea-8f3d-24e8bebc0bc8 # SETUP TODO: Add your service principal application ID
+    workspace:
+      host: https://fe-vm-vdm-classic-b8uaoy.cloud.databricks.com/ # SETUP TODO: Add your staging workspace URL
+
+  prod:
+    mode: production
+    presets:
+      name_prefix: "[prod] "
+    run_as:
+      service_principal_name: 7f724768-4f35-4aea-8f3d-24e8bebc0bc8 # SETUP TODO: Add your service principal application ID
+    workspace:
+      host: https://fe-vm-vdm-classic-b8uaoy.cloud.databricks.com/ # SETUP TODO: Add your prod workspace URL

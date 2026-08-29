@@ -1,0 +1,20 @@
+resources:
+  jobs:
+    monitoring:
+      name: Monitoring Job
+      environments:
+      - environment_key: default
+        spec:
+          client: "4"
+          dependencies:
+          - ${var.whl_path}
+      tasks:
+      - task_key: run_monitoring
+        notebook_task:
+          notebook_path: ../../notebooks/monitoring_job.py
+          base_parameters:
+            catalog_name: ${var.catalog_name}
+            schema_name: ${var.schema_name}
+        environment_key: default
+      queue:
+        enabled: true
