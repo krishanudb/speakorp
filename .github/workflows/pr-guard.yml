@@ -1,0 +1,26 @@
+name: PR Guard
+
+# Enforces the repository branch policy:
+#   - Only the `dev` branch may be merged into `main`.
+# This workflow runs on the base branch (main), so it must live on `main`
+# to take effect for PRs targeting main.
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  only-dev-into-main:
+    name: Only dev -> main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ensure the PR source branch is dev
+        run: |
+          echo "Base branch : ${{ github.base_ref }}"
+          echo "Source branch: ${{ github.head_ref }}"
+          if [ "${{ github.head_ref }}" != "dev" ]; then
+            echo "::error::PRs into 'main' are only allowed from 'dev' (got '${{ github.head_ref }}'). Merge your feature branch into 'dev' first."
+            exit 1
+          fi
+          echo "OK: PR into 'main' originates from 'dev'."
