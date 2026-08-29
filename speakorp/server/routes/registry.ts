@@ -7,6 +7,7 @@
 
 import type { Application } from 'express';
 import type { ServingHandle } from './context';
+import { registerHealthRoutes } from './health';
 
 export interface RouteContext {
   /** Serving-plugin handle for LLM calls, or null when not configured. */
@@ -14,8 +15,6 @@ export interface RouteContext {
 }
 
 export type RouteRegistrar = (app: Application, ctx: RouteContext) => void;
-
-import { registerHealthRoutes } from './health';
 
 /** All feature route registrars. Feature branches append their entry here. */
 export const routeRegistrars: RouteRegistrar[] = [

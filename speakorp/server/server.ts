@@ -1,20 +1,39 @@
 import { createApp, server, serving } from '@databricks/appkit';
 import { routeRegistrars, type RouteContext } from './routes/registry';
-import type { ServingHandle } from './routes/context';
+import type { ServingHandle, ServingModelResponse } from './routes/context';
 
 await createApp({
   plugins: [server(), serving()],
   async onPluginsReady(appkit) {
-    // Adapt the serving plugin to our minimal structural handle; tolerate it
-    // being unconfigured locally so the rest of the API still boots.
+    // Adapt the serving plugin to our minimal structural handle. serving() does
+    // not validate configuration, so we gate on the endpoint env var: when it's
+    // absent (typical local dev), expose `serving: null` and let routes degrade
+    // gracefully instead of hitting an error on first invoke.
     let servingHandle: ServingHandle | null = null;
-    try {
+    if (process.env.DATABRICKS_SERVING_ENDPOINT_NAME) {
       const s = appkit.serving();
       servingHandle = {
-        invoke: (req) => s.invoke(req),
+        async invoke(req) {
+          const res = await s.invoke(req);
+          // Normalize the ExecutionResult wrapper returned at runtime; if the
+          // raw completion comes back instead, pass it through unchanged.
+          const wrapper = res as {
+            ok?: boolean;
+            data?: ServingModelResponse;
+            status?: number;
+            message?: string;
+          };
+          if (typeof wrapper.ok === 'boolean') {
+            if (!wrapper.ok) {
+              throw new Error(`serving invoke failed (${wrapper.status}): ${wrapper.message}`);
+            }
+            return wrapper.data ?? {};
+          }
+          return res;
+        },
       };
-    } catch (err) {
-      console.warn('[speakorp] serving plugin unavailable; AI feedback will be degraded:', err);
+    } else {
+      console.warn('[speakorp] DATABRICKS_SERVING_ENDPOINT_NAME unset; AI feedback degraded.');
     }
 
     const ctx: RouteContext = { serving: servingHandle };

@@ -10,6 +10,7 @@ import {
 } from '@databricks/appkit-ui/react';
 import { Menu } from 'lucide-react';
 import { appRoutes } from './routes';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
@@ -94,7 +95,10 @@ function Layout() {
 const router = createBrowserRouter([
   {
     element: <Layout />,
-    children: appRoutes.map((r) => ({ path: r.path, element: r.element })),
+    children: [
+      ...appRoutes.map((r) => ({ path: r.path, element: r.element })),
+      { path: '*', element: <NotFoundPage /> },
+    ],
   },
 ]);
 

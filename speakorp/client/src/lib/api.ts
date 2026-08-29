@@ -28,27 +28,29 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+const enc = encodeURIComponent;
+
 export const api = {
   listLessons: () => getJson<ListLessonsResponse>('/api/lessons'),
 
-  getLesson: (id: number) => getJson<GetLessonResponse>(`/api/lessons/${id}`),
+  getLesson: (id: number) => getJson<GetLessonResponse>(`/api/lessons/${enc(id)}`),
 
   startSession: (body: StartSessionRequest) =>
     postJson<StartSessionResponse>('/api/sessions/start', body),
 
   uploadSegment: (sessionId: string, segmentId: string, body: UploadSegmentRequest) =>
     postJson<UploadSegmentResponse>(
-      `/api/sessions/${sessionId}/segments/${segmentId}/upload`,
+      `/api/sessions/${enc(sessionId)}/segments/${enc(segmentId)}/upload`,
       body,
     ),
 
   getFeedback: (sessionId: string, segmentId: string) =>
     getJson<FeedbackResponse>(
-      `/api/sessions/${sessionId}/segments/${segmentId}/feedback`,
+      `/api/sessions/${enc(sessionId)}/segments/${enc(segmentId)}/feedback`,
     ),
 
   getProgress: (userId: string, skillId?: string) =>
     getJson<ProgressResponse>(
-      `/api/users/${userId}/progress${skillId ? `?skillId=${encodeURIComponent(skillId)}` : ''}`,
+      `/api/users/${enc(userId)}/progress${skillId ? `?skillId=${enc(skillId)}` : ''}`,
     ),
 };
