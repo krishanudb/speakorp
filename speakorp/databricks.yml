@@ -5,15 +5,22 @@ resources:
   apps:
     app:
       name: "speakorp"
-      description: "Barebones hello world Databricks App"
+      description: "Executive communication speaking-practice coach with AI feedback"
       source_code_path: ./
 
       # Start the app automatically on deploy.
       lifecycle:
         started: true
-      # Uncomment to enable on behalf of user API scopes. Available scopes: sql, dashboards.genie, files.files, serving.serving-endpoints
-      # user_api_scopes:
-      #   - sql
+
+      # On-behalf-of-user scope so the app can query the model serving endpoint.
+      user_api_scopes:
+        - serving.serving-endpoints
+
+      resources:
+        - name: serving-endpoint
+          serving_endpoint:
+            name: databricks-claude-sonnet-5
+            permission: CAN_QUERY
 
 targets:
   default:
