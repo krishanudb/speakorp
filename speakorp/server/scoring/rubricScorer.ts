@@ -108,11 +108,12 @@ const SKILL_SCORERS: Record<
       note: 'proxy from duration and word count adequacy; pitch not measured in MVP',
     };
 
-    // Proxy: adequate word count and duration suggest more opportunity for varied pitch
+    // Proxy: adequate word count and duration suggest more opportunity for varied pitch.
+    // Capped below 90 so an UNMEASURED signal never yields a spurious "strong" band.
     let score = 70; // baseline
-    score += features.wordCount >= 100 ? 10 : 0;
-    score += features.durationSec >= 45 ? 10 : 0;
-    score = Math.max(0, Math.min(100, Math.round(score)));
+    score += features.wordCount >= 100 ? 8 : 0;
+    score += features.durationSec >= 45 ? 7 : 0;
+    score = Math.max(0, Math.min(89, Math.round(score)));
 
     return {
       score,
@@ -263,7 +264,19 @@ const SKILL_SCORERS: Record<
  * Same input always produces the same output (no randomness).
  */
 export function scoreSegment(input: ScoreInput): SkillScore[] {
-  const { segmentRecordingId, skillIds, features, transcript } = input;
+  const { segmentRecordingId, skillIds, transcript } = input;
+
+  // Sanitize features so a non-finite upstream value (e.g. NaN WPM from a
+  // zero-duration segment) can never propagate into a NaN score and break the
+  // documented 0..100 integer invariant.
+  const num = (v: number): number => (Number.isFinite(v) ? v : 0);
+  const features: SegmentFeatures = {
+    durationSec: num(input.features.durationSec),
+    wordCount: num(input.features.wordCount),
+    wordsPerMinute: num(input.features.wordsPerMinute),
+    pauseCount: num(input.features.pauseCount),
+    longestPauseSec: num(input.features.longestPauseSec),
+  };
 
   return skillIds.map((skillId) => {
     const scorerFn = SKILL_SCORERS[skillId];
