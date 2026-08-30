@@ -50,6 +50,12 @@ export function extractJsonArray(text: string): unknown[] | null {
   return null;
 }
 
+/** Trim `text` to at most `maxWords` words (adds an ellipsis when truncated). */
+function limitWords(text: string, maxWords: number): string {
+  const words = text.trim().split(/\s+/);
+  return words.length <= maxWords ? text.trim() : words.slice(0, maxWords).join(' ') + '…';
+}
+
 /**
  * Generates a generic fallback feedback message for a skill when the LLM is unavailable.
  */
@@ -60,11 +66,13 @@ function generateFallbackMessage(
 ): FeedbackMessage {
   const skillId = score.skillId;
 
-  // Use the rubric's sampleFeedback as the summary, or fallback to generic text
+  // Use the rubric's sampleFeedback first sentence as the summary (word-limited,
+  // NOT char-sliced, so it never cuts mid-word), or generic text as a last resort.
+  const firstSentence = rubric.sampleFeedback?.split('.')[0]?.trim();
   const summary =
-    rubric.sampleFeedback && rubric.sampleFeedback.length > 0
-      ? rubric.sampleFeedback.split('.')[0].slice(0, 25)
-      : `Keep practicing ${skillId}.`;
+    firstSentence && firstSentence.length > 0
+      ? limitWords(firstSentence, 25)
+      : 'Keep practicing this skill and reviewing the rubric.';
 
   const genericTips: Record<string, string> = {
     needs_work: 'Focus on this skill this week.',
@@ -170,7 +178,7 @@ Return the JSON array now:`;
   try {
     const response = await serving.invoke({
       messages: [{ role: 'user', content: userPrompt }],
-      temperature: 0.7,
+      temperature: 0, // schema-locked JSON: minimize non-conforming output
       max_tokens: 1024,
     });
 
@@ -185,23 +193,25 @@ Return the JSON array now:`;
       throw new Error('Failed to extract valid JSON array');
     }
 
-    // Map the parsed array to FeedbackMessage[], validating schema
-    const messages: FeedbackMessage[] = [];
+    // Map the parsed array to FeedbackMessage, keyed by skillId. Only accept
+    // objects that name an input skill and carry non-empty summary AND tip; skip
+    // duplicates (first valid one wins).
+    const bySkill = new Map<string, FeedbackMessage>();
     for (const item of parsed) {
       const obj = item as Record<string, unknown>;
       const skillId = String(obj.skillId ?? '');
-      const score = Number(obj.score ?? 0);
-      const summary = String(obj.summary ?? '');
-      const specificTip = String(obj.specificTip ?? '');
+      const summary = String(obj.summary ?? '').trim();
+      const specificTip = String(obj.specificTip ?? '').trim();
       const timestampRef =
-        typeof obj.timestampRef === 'number' ? obj.timestampRef : null;
+        typeof obj.timestampRef === 'number' && obj.timestampRef >= 0
+          ? obj.timestampRef
+          : null;
 
-      // Validate that skillId is in the input list
-      if (!skillScores.some((s) => s.skillId === skillId)) {
-        continue;
-      }
+      if (!skillScores.some((s) => s.skillId === skillId)) continue;
+      if (!summary || !specificTip) continue;
+      if (bySkill.has(skillId)) continue;
 
-      messages.push({
+      bySkill.set(skillId, {
         id: `fb_${segmentRecordingId}_${skillId}`,
         segmentRecordingId,
         skillId,
@@ -211,12 +221,27 @@ Return the JSON array now:`;
       });
     }
 
-    // If we got valid messages, return them; otherwise fall back
-    if (messages.length > 0) {
-      return messages;
+    if (bySkill.size === 0) {
+      throw new Error('No valid feedback messages extracted');
     }
 
-    throw new Error('No valid feedback messages extracted');
+    // Return exactly one message per scored skill: the LLM's where valid, a
+    // deterministic fallback for any skill the model omitted or left empty.
+    return skillScores.map(
+      (score) =>
+        bySkill.get(score.skillId) ??
+        generateFallbackMessage(
+          segmentRecordingId,
+          score,
+          rubricMap.get(score.skillId) ?? {
+            skillId: score.skillId,
+            inputs: 'unknown',
+            metric: 'unknown',
+            bands: 'unknown',
+            sampleFeedback: `Good work on ${score.skillId}.`,
+          }
+        )
+    );
   } catch {
     // Graceful fallback: return deterministic messages using rubric sampleFeedback
     return skillScores.map((score) => {
