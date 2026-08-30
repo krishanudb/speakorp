@@ -4,13 +4,8 @@ import {
   composeFeedback,
   ComposeInput,
 } from './feedbackComposer';
-import {
-  SkillScore,
-  Rubric,
-  FeedbackMessage,
-  ServingModelResponse,
-} from '../../shared/types';
-import { ServingHandle } from '../routes/context';
+import { SkillScore, Rubric } from '../../shared/types';
+import { ServingHandle, ServingModelResponse } from '../routes/context';
 
 describe('extractJsonArray', () => {
   it('parses a fenced ```json [...] ``` block', () => {

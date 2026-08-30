@@ -6,7 +6,7 @@
 // - week1.ts, week2.ts, week3.ts, week4.ts export: WEEK1_LESSONS, ..., WEEK4_LESSONS
 // - rubrics.ts exports: SKILLS, RUBRICS, getSkill, getRubric
 
-import type { Lesson, Rubric, Warmup } from '../types';
+import type { Lesson, Rubric } from '../types';
 import { WARMUPS, getWarmups } from './warmups';
 import { WEEK1_LESSONS } from './week1';
 import { WEEK2_LESSONS } from './week2';

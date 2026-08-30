@@ -90,11 +90,13 @@ export const registerSessionsRoutes: RouteRegistrar = (app) => {
         return res.status(400).json({ error: 'userId must be a non-empty string' });
       }
 
-      // Validate lessonId and fetch the lesson
-      let lesson: Lesson;
-      try {
-        lesson = getLesson(lessonId);
-      } catch {
+      // Validate lessonId and fetch the lesson (getLesson returns undefined,
+      // it does not throw, for an unknown id).
+      if (typeof lessonId !== 'number') {
+        return res.status(400).json({ error: 'lessonId must be a number' });
+      }
+      const lesson = getLesson(lessonId);
+      if (!lesson) {
         return res.status(400).json({ error: `Invalid lessonId: ${lessonId}` });
       }
 
@@ -122,7 +124,7 @@ export const registerSessionsRoutes: RouteRegistrar = (app) => {
         sessionId,
         segments: specs,
       };
-      res.json(response);
+      return res.json(response);
     }
   );
 };

@@ -5,6 +5,30 @@ import type { SegmentFeatures } from '@shared/types';
 import { computeFeatures } from '@/lib/features';
 import { cn } from '@/lib/utils';
 
+// The Web Speech API is non-standard and not in lib.dom; augment Window so we
+// can feature-detect it without an `as any` assertion (banned by appkit lint).
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => SpeechRecognitionLike;
+    webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+  }
+}
+
+interface SpeechRecognitionLike {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: unknown) => void) | null;
+  start(): void;
+  stop(): void;
+}
+
+interface SpeechRecognitionEventLike {
+  resultIndex: number;
+  results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }>;
+}
+
 export interface RecorderResult {
   transcript: string;
   features: SegmentFeatures;
@@ -38,7 +62,7 @@ export function Recorder({ requireVideo = false, onComplete }: RecorderProps) {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -48,13 +72,13 @@ export function Recorder({ requireVideo = false, onComplete }: RecorderProps) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEventLike) => {
         let interimTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
@@ -66,9 +90,13 @@ export function Recorder({ requireVideo = false, onComplete }: RecorderProps) {
         }
       };
 
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event: unknown) => {
         // Log but don't fail; user can type manually
-        console.warn('Speech Recognition error:', event.error);
+        const detail =
+          typeof event === 'object' && event !== null && 'error' in event
+            ? (event as { error: unknown }).error
+            : event;
+        console.warn('Speech Recognition error:', detail);
       };
 
       recognitionRef.current = recognition;

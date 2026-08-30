@@ -1,4 +1,4 @@
-import { Lesson } from '../types';
+import type { Lesson } from '../types';
 
 export const WEEK2_LESSONS: Lesson[] = [
   {

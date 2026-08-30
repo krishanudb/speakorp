@@ -57,8 +57,11 @@ export const registerFeedbackRoutes: RouteRegistrar = (app, ctx) => {
 
       // Run the pipeline
       try {
-        // Derive features from stored data
-        const features = deriveFeatures(segment.durationSec, segment.transcript);
+        // Prefer the client-computed features captured at upload (they carry
+        // real pause/pace data); fall back to deriving from stored duration.
+        const features =
+          store.features.get(segmentId) ??
+          deriveFeatures(segment.durationSec, segment.transcript);
 
         // Score the segment
         const scores = scoreSegment({
@@ -99,7 +102,7 @@ export const registerFeedbackRoutes: RouteRegistrar = (app, ctx) => {
         store.feedback.set(segmentId, messages);
 
         // Mark any matching job as ready
-        for (const [jobId, job] of store.jobs.entries()) {
+        for (const job of store.jobs.values()) {
           if (job.segmentId === segmentId) {
             job.status = 'ready';
           }

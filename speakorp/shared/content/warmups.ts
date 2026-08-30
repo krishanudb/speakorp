@@ -1,4 +1,4 @@
-import { Warmup } from '../types';
+import type { Warmup } from '../types';
 
 /** Shared warmup bank (W1–W8) — reused across all lessons. */
 export const WARMUPS: Warmup[] = [
