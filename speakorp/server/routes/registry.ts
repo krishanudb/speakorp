@@ -12,6 +12,7 @@ import { registerLessonsRoutes } from './lessons';
 import { registerSegmentRoutes } from './segments';
 import { registerSessionsRoutes } from './sessions';
 import { registerProgressRoutes } from './progress';
+import { registerFeedbackRoutes } from './feedback';
 
 export interface RouteContext {
   /** Serving-plugin handle for LLM calls, or null when not configured. */
@@ -27,4 +28,5 @@ export const routeRegistrars: RouteRegistrar[] = [
   registerSegmentRoutes,
   registerSessionsRoutes,
   registerProgressRoutes,
+  registerFeedbackRoutes,
 ];
