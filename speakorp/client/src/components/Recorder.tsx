@@ -62,7 +62,7 @@ export function Recorder({ requireVideo = false, onComplete }: RecorderProps) {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -78,7 +78,7 @@ export function Recorder({ requireVideo = false, onComplete }: RecorderProps) {
       recognition.continuous = true;
       recognition.interimResults = true;
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEventLike) => {
         let interimTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
@@ -90,9 +90,13 @@ export function Recorder({ requireVideo = false, onComplete }: RecorderProps) {
         }
       };
 
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event: unknown) => {
         // Log but don't fail; user can type manually
-        console.warn('Speech Recognition error:', event.error);
+        const detail =
+          typeof event === 'object' && event !== null && 'error' in event
+            ? (event as { error: unknown }).error
+            : event;
+        console.warn('Speech Recognition error:', detail);
       };
 
       recognitionRef.current = recognition;
