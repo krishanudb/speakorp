@@ -9,6 +9,7 @@ import type { Application } from 'express';
 import type { ServingHandle } from './context';
 import { registerHealthRoutes } from './health';
 import { registerLessonsRoutes } from './lessons';
+import { registerSegmentRoutes } from './segments';
 
 export interface RouteContext {
   /** Serving-plugin handle for LLM calls, or null when not configured. */
@@ -21,4 +22,5 @@ export type RouteRegistrar = (app: Application, ctx: RouteContext) => void;
 export const routeRegistrars: RouteRegistrar[] = [
   registerHealthRoutes,
   registerLessonsRoutes,
+  registerSegmentRoutes,
 ];
