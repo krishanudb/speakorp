@@ -6,6 +6,7 @@
 
 import type { ReactNode } from 'react';
 import { HomePage } from './pages/HomePage';
+import { ProgressDashboard } from './pages/ProgressDashboard';
 
 export interface AppRoute {
   path: string;
@@ -17,4 +18,5 @@ export interface AppRoute {
 
 export const appRoutes: AppRoute[] = [
   { path: '/', label: 'Home', nav: true, element: <HomePage /> },
+  { path: '/progress', label: 'Progress', nav: true, element: <ProgressDashboard /> },
 ];
