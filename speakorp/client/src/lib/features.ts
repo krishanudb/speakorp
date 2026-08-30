@@ -25,9 +25,10 @@ export function computeFeatures(transcript: string, durationSec: number): Segmen
     wordsPerMinute = Math.round(wordCount / minutes);
   }
 
-  // Pause estimation: count sentence-ending punctuation [.?!] and long dashes
-  // Each punctuation mark is treated as a pause boundary
-  const pauseMatches = transcript.match(/[.?!—–-]/g);
+  // Pause estimation (proxy): count sentence-ending punctuation as pause
+  // boundaries. Intentionally excludes hyphens/en-dashes so in-word hyphens
+  // ("state-of-the-art") and decimals ("3.5") don't inflate the count.
+  const pauseMatches = transcript.match(/[.?!…]|—/g);
   const pauseCount = pauseMatches ? pauseMatches.length : 0;
 
   // Longest pause: if any pauses exist, use a small constant proxy (0.8 seconds)

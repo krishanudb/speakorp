@@ -143,7 +143,9 @@ export function Recorder({ requireVideo = false, onComplete }: RecorderProps) {
 
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const blob = new Blob(chunksRef.current, {
+          type: requireVideo ? 'video/webm' : 'audio/webm',
+        });
         const url = URL.createObjectURL(blob);
         mediaUrlRef.current = url;
       };
@@ -159,10 +161,11 @@ export function Recorder({ requireVideo = false, onComplete }: RecorderProps) {
   };
 
   const handleComplete = () => {
-    const durationSec = (Date.now() - startTimeRef.current) / 1000;
-
-    // If permission was denied, use manual duration (default 30s)
-    const finalDuration = permissionDenied ? 30 : durationSec;
+    // elapsedSec is driven by the recording timer and frozen when recording
+    // stops, so it reflects the actual spoken duration (not idle review time).
+    // Fall back to 30s when there was no recording (mic denied, or the user
+    // typed a transcript without ever recording) so WPM stays sane.
+    const finalDuration = permissionDenied || elapsedSec <= 0 ? 30 : elapsedSec;
 
     const result: RecorderResult = {
       transcript: transcript.trim(),
@@ -172,12 +175,8 @@ export function Recorder({ requireVideo = false, onComplete }: RecorderProps) {
     };
 
     onComplete(result);
-
-    // Clean up
-    if (mediaUrlRef.current) {
-      URL.revokeObjectURL(mediaUrlRef.current);
-      mediaUrlRef.current = '';
-    }
+    // Note: mediaUrl is left valid for the consumer; the unmount cleanup
+    // revokes it. Revoking here would hand the consumer a dead blob URL.
   };
 
   // Clean up on unmount
