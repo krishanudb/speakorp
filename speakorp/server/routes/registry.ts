@@ -8,6 +8,7 @@
 import type { Application } from 'express';
 import type { ServingHandle } from './context';
 import { registerHealthRoutes } from './health';
+import { registerLessonsRoutes } from './lessons';
 import { registerSegmentRoutes } from './segments';
 
 export interface RouteContext {
@@ -20,5 +21,6 @@ export type RouteRegistrar = (app: Application, ctx: RouteContext) => void;
 /** All feature route registrars. Feature branches append their entry here. */
 export const routeRegistrars: RouteRegistrar[] = [
   registerHealthRoutes,
+  registerLessonsRoutes,
   registerSegmentRoutes,
 ];
