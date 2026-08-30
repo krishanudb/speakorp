@@ -85,11 +85,14 @@ export const registerSegmentRoutes: RouteRegistrar = (app) => {
 
       const { transcript, hasVideo, features } = req.body as UploadSegmentRequest;
 
-      // Update the stored SegmentRecording
+      // Update the stored SegmentRecording and keep the client-computed
+      // features so the scorer can use the real pause/pace/word metrics
+      // (rather than re-deriving them with zeroed pause data).
       segment.transcript = transcript;
       segment.hasVideo = hasVideo;
       segment.durationSec = features.durationSec;
       segment.mediaUrl = `memory://${segmentId}`;
+      store.features.set(segmentId, features);
 
       // Create a ProcessingJob
       const jobId = newId('job');
@@ -106,7 +109,7 @@ export const registerSegmentRoutes: RouteRegistrar = (app) => {
       const response: UploadSegmentResponse = {
         processingJobId: jobId,
       };
-      res.status(200).json(response);
+      return res.status(200).json(response);
     }
   );
 };

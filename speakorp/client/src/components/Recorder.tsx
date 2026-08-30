@@ -5,6 +5,30 @@ import type { SegmentFeatures } from '@shared/types';
 import { computeFeatures } from '@/lib/features';
 import { cn } from '@/lib/utils';
 
+// The Web Speech API is non-standard and not in lib.dom; augment Window so we
+// can feature-detect it without an `as any` assertion (banned by appkit lint).
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => SpeechRecognitionLike;
+    webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+  }
+}
+
+interface SpeechRecognitionLike {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: unknown) => void) | null;
+  start(): void;
+  stop(): void;
+}
+
+interface SpeechRecognitionEventLike {
+  resultIndex: number;
+  results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }>;
+}
+
 export interface RecorderResult {
   transcript: string;
   features: SegmentFeatures;
@@ -48,7 +72,7 @@ export function Recorder({ requireVideo = false, onComplete }: RecorderProps) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;

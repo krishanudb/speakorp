@@ -52,8 +52,11 @@ describe('computeFeatures', () => {
     expect(result.durationSec).toBe(45.5);
   });
 
-  it('counts dashes as pauses', () => {
-    const result = computeFeatures('hello — world – test - end', 60);
-    expect(result.pauseCount).toBe(3);
+  it('counts em-dashes and sentence enders as pauses, not in-word hyphens/en-dashes', () => {
+    // em-dash (—) counts; en-dash (–) and hyphen (-) do not (avoid over-counting
+    // "state-of-the-art"/decimals).
+    expect(computeFeatures('hello — world – test - end', 60).pauseCount).toBe(1);
+    expect(computeFeatures('state-of-the-art design', 60).pauseCount).toBe(0);
+    expect(computeFeatures('Done. Ready? Go!', 60).pauseCount).toBe(3);
   });
 });

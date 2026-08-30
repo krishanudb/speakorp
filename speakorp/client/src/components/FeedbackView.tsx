@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { SkillScore, FeedbackMessage } from '@shared/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@databricks/appkit-ui/react';
 import { bandLabel, bandClasses } from '@/lib/bandColor';
@@ -14,7 +15,7 @@ export interface FeedbackViewProps {
  * Displays skill name, score with progress bar, band badge, feedback summary,
  * specificTip, and optional timestamp hint.
  */
-export function FeedbackView(props: FeedbackViewProps): JSX.Element {
+export function FeedbackView(props: FeedbackViewProps): ReactNode {
   const { skillScores, feedbackMessages, skillNames } = props;
 
   // Group feedback messages by skillId for quick lookup

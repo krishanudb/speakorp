@@ -1,4 +1,4 @@
-import { Skill, Rubric } from '../types';
+import type { Skill, Rubric } from '../types';
 
 /**
  * All 12 trainable skills from Lessons 1–20 (Weeks 1–4).

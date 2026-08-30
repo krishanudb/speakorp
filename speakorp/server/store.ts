@@ -6,6 +6,7 @@
 import type {
   FeedbackMessage,
   ProcessingStatus,
+  SegmentFeatures,
   SegmentRecording,
   Session,
   SkillScore,
@@ -22,6 +23,8 @@ export interface ProcessingJob {
 class MemoryStore {
   readonly sessions = new Map<string, Session>();
   readonly segments = new Map<string, SegmentRecording>();
+  /** Client-computed acoustic/timing proxies, kept for the scorer. */
+  readonly features = new Map<string, SegmentFeatures>();
   readonly jobs = new Map<string, ProcessingJob>();
   /** segmentId -> scores */
   readonly scores = new Map<string, SkillScore[]>();
@@ -31,6 +34,7 @@ class MemoryStore {
   reset(): void {
     this.sessions.clear();
     this.segments.clear();
+    this.features.clear();
     this.jobs.clear();
     this.scores.clear();
     this.feedback.clear();
