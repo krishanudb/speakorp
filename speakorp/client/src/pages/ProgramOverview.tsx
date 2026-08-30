@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@databricks/appkit-ui/react';
+import { Card, CardContent } from '@databricks/appkit-ui/react';
 import { NavLink } from 'react-router';
 import type { LessonSummary } from '@shared/api';
 import { api } from '../lib/api';
