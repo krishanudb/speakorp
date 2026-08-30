@@ -10,6 +10,7 @@ import type { ServingHandle } from './context';
 import { registerHealthRoutes } from './health';
 import { registerLessonsRoutes } from './lessons';
 import { registerSegmentRoutes } from './segments';
+import { registerSessionsRoutes } from './sessions';
 
 export interface RouteContext {
   /** Serving-plugin handle for LLM calls, or null when not configured. */
@@ -23,4 +24,5 @@ export const routeRegistrars: RouteRegistrar[] = [
   registerHealthRoutes,
   registerLessonsRoutes,
   registerSegmentRoutes,
+  registerSessionsRoutes,
 ];
